@@ -1,0 +1,67 @@
+const fs = require('fs');
+
+// Function to decode a value from its specified base
+function decodeValue(base, value) {
+    return parseInt(value, base);
+}
+
+// Function to perform Lagrange Interpolation
+function lagrangeInterpolate(points, k) {
+    let interpolatedResult = 0;
+
+    // Loop through each point to compute the Lagrange polynomial
+    for (let i = 0; i < k; i++) {
+        let term = points[i].y;
+        for (let j = 0; j < k; j++) {
+            if (i !== j) {
+                term *= -points[j].x / (points[i].x - points[j].x);
+            }
+        }
+        interpolatedResult += term;
+    }
+
+    return interpolatedResult;
+}
+
+// Function to find the constant term from the input JSON
+function findConstantTerm(input) {
+    const keys = input.keys;
+    const numPoints = keys.n;
+    const requiredPoints = keys.k;
+
+    const points = [];
+
+    // Extract and decode points from the JSON input
+    for (let i = 1; i <= numPoints; i++) {
+        if (input[i]) {
+            const base = parseInt(input[i].base);
+            const value = input[i].value;
+            const x = i;
+            const y = decodeValue(base, value);
+            points.push({ x, y });
+        }
+    }
+
+    // Use Lagrange interpolation to find the constant term
+    const constantTerm = lagrangeInterpolate(points, requiredPoints);
+    return constantTerm;
+}
+
+// Read the JSON file
+fs.readFile('testcase2.json', 'utf8', (err, data) => {
+    if (err) {
+        console.error('Error reading the file:', err);
+        return;
+    }
+    
+    try {
+        // Parse the JSON data
+        const inputJSON = JSON.parse(data);
+        
+        // Call the function with the parsed JSON
+        const constantTerm = findConstantTerm(inputJSON);
+        console.log("The constant term (c) is:", constantTerm);
+    } catch (err) {
+        console.error('Error parsing the JSON:', err);
+    }
+});
